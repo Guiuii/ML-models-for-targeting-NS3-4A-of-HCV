@@ -1,6 +1,39 @@
 # ML models for targeting NS3/4A of HCV
 
-Проект по построению QSAR модели для предсказания активности химических соединений в отношении NS3/4A - неструктурного белка вируса Гепатита С. 
+Проект по построению QSAR модели для предсказания активности химических соединений в отношении NS3/4A - неструктурного белка вируса Гепатита С. Полученный результат на тестовой выборке: **Test R2 = 0.8358**
+
+## Содержание
+1. [Структура проекта](#Структура-проекта)
+2. [Препроцессинг данных](#Препроцессинг-данных)
+3. [Визуализация данных](#Визуализация-данных)
+4. [Выбор методов машинного обучения](#Выбор-методов-машинного-обучения)
+
+## Структура проекта
+```bash
+├── feature_selection.ipynb
+├── model_DT.ipynb
+├── model_GB.ipynb
+├── model_RF.ipynb
+├── Plots
+│   ├── CatBoost_Decision_Boundary.png
+│   ├── k-means_with_t-SNE_visualization.png
+│   ├── kNN_Decision_Boundary.png
+│   ├── MLP_Decision_Boundary.png
+│   ├── PCA_projection.png
+│   ├── R2_comparison.png
+│   ├── Scree_Plot_with_Broken_Stick_Model.png
+│   ├── SVR_Decision_Boundary.png
+│   ├── XGBoost_Decision_Boundary.png
+│   └── XGBoost_with_optuna.png
+├── README.md
+└── Visualization.ipynb
+```
+Весь код проекта разделен по нескольким ноутбукам:
+- Отбор признаков в feature_selection.ipynb
+- Визуализация данных в Visualization.ipynb
+- Построение модели с помощью Decision Tree в model_DT.ipynb
+- Построение модели с помощью Random Forest в model_RF.ipynb
+- Построение модели с помощью Gradient Boosting в model_GB.ipynb
 
 ## Препроцессинг данных: 
 
@@ -21,15 +54,15 @@
 
 1. Изначально проведено уменьшение размерности данных с помощью PCA а также отрисован Scree Plot with Broken Stick Model. Таким образом , только первые 4 главные компоненты (PC1–PC4) объясняют дисперсию, которая больше, чем ожидалось случайно (по модели сломанной палки).
 
-![PCA](Plots/Scree Plot with Broken Stick Model.png)
+![PCA](Plots/Scree_Plot_with_Broken_Stick_Model.png)
 
 2. Первые 2 компоненты были отображены. Молекулы были разделены на 2 группы: активные (pIC50>=5) и неактивные(pIC50<5). Можно заметить, что активные и неактивные молекулы хорошо разделяются.
 
-![PC1-PC2](Plots/PCA projection.png)
+![PC1-PC2](Plots/PCA_projection.png)
 
 3. Далее была проведена кластеризация с помощью k-means (k=5). Визуализация кластеров произведена с помощью t-SNE. Можно заметить, что неактивные молекулы находятся в основном в зеленом кластере, а также несколько соединений в фиолетовом кластере. Остальные активные соединения разделены на 3 отдельных кластера.
 
-![k-meanse_t-SNE](Plots/k-means with t-SNE visualization.png)
+![k-meanse_t-SNE](Plots/k-means_with_t-SNE_visualization.png)
 
 ## Выбор методов машинного обучения
 
@@ -37,15 +70,15 @@
 
 Построен сводный график по сравнению коэффициентов детерминации (R²) на различных моделях. Поскольку в целом различные методы отбора признаков дают схожые метрики, было принято решение оставить только одну модель для отбора признаков - Random Forest и продолжить подбор различных моделей для обучения именно на этом наборе данных.
 
-![Comparison](Plots/R2 comparison.png)
+![Comparison](Plots/R2_comparison.png)
 
 Также построены разделяющие границы для моделей SVR, kNN, MLP на примере признаков, отобранных с помощью RF.
 
-![SVR](Plots/SVR Decision Boundary.png)
+![SVR](Plots/SVR_Decision_Boundary.png)
 
-![kNN](Plots/kNN Decision Boundary.png)
+![kNN](Plots/kNN_Decision_Boundary.png)
 
-![MLP](Plots/MLP Decision Boundary.png)
+![MLP](Plots/MLP_Decision_Boundary.png)
 
 Поскольку данные хорошо кластеризовались с помощью k-means, изначально было выдвинуто предположение, что модель kNN Regressor хорошо справится с задачей предсказания pIC50, что подтверждается значением коэффициента детерминации.
 Таким образом, модель k ближайших соседей была выбрана бейзлайном для решения данной задачи: **RMSE = 0.68099, R² = 0.8290.**
@@ -54,11 +87,11 @@
 
 Граница принятия решения для CatBoost:
 
-![CatBoost](Plots/CatBoost Decision Boundary.png)
+![CatBoost](Plots/CatBoost_Decision_Boundary.png)
 
 Граница принятия решения для XGBoost:
 
-![XGBoost](Plots/XGBoost Decision Boundary.png)
+![XGBoost](Plots/XGBoost_Decision_Boundary.png)
 
 Далее для улучшения значений коэффициента детерминации и предотвращения переобучения было принято решение оптимизировать зазор R² между train и test с помощью библиотеки optuna. 
 
@@ -72,7 +105,7 @@ score = r2_val - penalty * gap  # Минимизируем эту функцию
 
 С помощью данного подхода была улучшена метрика, полученная с помощью baseline: **Test R2 = 0.8358**
 
-![XGBoost](Plots/XGBoost with optuna.png)
+![XGBoost](Plots/XGBoost_with_optuna.png)
 
 Также были построены 2 модели с разными архитектурами нейронных сетей: с FC слоями и трансформер, однако они не привели к улучшению метрик.
 
